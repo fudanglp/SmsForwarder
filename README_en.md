@@ -12,18 +12,13 @@ SmsForwarder - Not only forwarding text messages, but also a must-have for backu
 
 listens to SMS, incoming calls, and App notifications on Android mobile devices, and forward according to user defined rules to another App/device, including DingTalk, WeCom and WeCom Group Bot, Feishu App and Feishu Group Bot, E-mail, Bark, Webhook, Telegram Bot, ServerChan, PushPlus, SMS, etc.
 
-Including active control of the server and client, allowing you to easily and remotely send text messages, check text messages, check calls, check the phone book, check the battery, etc. (New in v3.0+)
-
 Automated Tasks & Quick Commands, effortlessly automate your life, doubling your efficiency, leaving more time to cherish family bonds! (New in v3.3+)
 
 > Notice: Starting from `2022-06-06`, the original `Java edition` code has been archived to the `v2.x` branch and will no longer be updated!
 
 > `v3.x` is compatible with Android 4.4 ~ 13.0.
 
->  `Join the SmsF Preview Program` (online weekly build updates, be the first to experience new versions & bug fixes).
-
 **Upgrade Instructions:**
-- After joining the SmsF Preview Experience Program, update online (available from `About Software` page, applicable for `v3.3.0_240305+`).
 - Manual download: [https://github.com/pppscn/SmsForwarder/actions/workflows/Weekly_Build.yml](https://github.com/pppscn/SmsForwarder/actions/workflows/Weekly_Build.yml)
 
 --------
@@ -36,7 +31,7 @@ Automated Tasks & Quick Commands, effortlessly automate your life, doubling your
 
 * Should any entity finds the code/APK of this repo infringing their rights, please provide notice and identity and proprietorship document, and we will delete relating code/APK after examining such document.
 
-* Privacy: `SmsForwarder` collects absolutely **NO** any of your personal data!! Except 1) version information to umeng.com for stats as the App starts, and 2) version number when manually check for update, `SmsForwarder` is **NOT** sending any data without users' knowledge.
+* Privacy: `SmsForwarder` collects absolutely **NO** personal data. This version removes Umeng analytics and disables online update checks.
 
 --------
 
@@ -90,7 +85,6 @@ See more screenshots：https://github.com/pppscn/SmsForwarder/wiki
 
 + https://github.com/xiaoyuanhost/TranspondSms (Foundation of `SmsForwarder`)
 + https://github.com/xuexiangjys/XUI （UI Framework）
-+ https://github.com/xuexiangjys/XUpdate (online update)
 + https://github.com/getActivity/XXPermissions (permission requiring)
 + https://github.com/mainfunx/frpc_android (reverse proxy)
 + https://github.com/gyf-dev/Cactus (Keep Alive)

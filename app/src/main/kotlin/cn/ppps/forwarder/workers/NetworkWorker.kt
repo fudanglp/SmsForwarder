@@ -14,14 +14,12 @@ import cn.ppps.forwarder.entity.MsgInfo
 import cn.ppps.forwarder.entity.TaskSetting
 import cn.ppps.forwarder.entity.condition.NetworkSetting
 import cn.ppps.forwarder.utils.CommonUtils
-import cn.ppps.forwarder.utils.HttpServerUtils
 import cn.ppps.forwarder.utils.Log
 import cn.ppps.forwarder.utils.PhoneUtils
 import cn.ppps.forwarder.utils.TaskWorker
 import cn.ppps.forwarder.utils.task.ConditionUtils
 import cn.ppps.forwarder.utils.task.TaskUtils
 import com.google.gson.Gson
-import com.xuexiang.xutil.app.ServiceUtils
 import com.xuexiang.xutil.resource.ResUtils.getString
 import java.net.HttpURLConnection
 import java.net.URL
@@ -125,19 +123,12 @@ class NetworkWorker(context: Context, params: WorkerParameters) : CoroutineWorke
                     }
                 }
 
-                val isHttpServerRunning = ServiceUtils.isServiceRunning("cn.ppps.forwarder.service.HttpServerService")
                 if (ipv4Pattern.matches(ipv4)) {
                     msg.append(getString(R.string.ipv4)).append(": ").append(ipv4).append("\n")
-                    if (isHttpServerRunning) {
-                        msg.append(getString(R.string.http_server)).append(": ").append("http://${ipv4}:${HttpServerUtils.serverPort}").append("\n")
-                    }
                 }
 
                 if (ipv6Pattern.matches(ipv6)) {
                     msg.append(getString(R.string.ipv6)).append(": ").append(ipv6).append("\n")
-                    if (isHttpServerRunning) {
-                        msg.append(getString(R.string.http_server)).append(": ").append("http://[${ipv6}]:${HttpServerUtils.serverPort}").append("\n")
-                    }
                 }
 
                 //TODO: 组装消息体 && 执行具体任务

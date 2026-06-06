@@ -590,6 +590,10 @@ class TasksEditFragment : BaseFragment<FragmentTasksEditBinding?>(), View.OnClic
                 }
             } else {
                 val typeAction = pos + KEY_BACK_CODE_ACTION
+                if (typeAction == TASK_ACTION_FRPC || typeAction == TASK_ACTION_HTTPSERVER) {
+                    XToastUtils.error("This action has been disabled")
+                    return
+                }
                 //判断是否已经添加过该类型动作
                 for (item in actionsList) {
                     //注意：TASK_ACTION_XXX 枚举值 等于 TASK_ACTION_FRAGMENT_LIST 索引加上 KEY_BACK_CODE_ACTION，不可改变
@@ -709,6 +713,10 @@ class TasksEditFragment : BaseFragment<FragmentTasksEditBinding?>(), View.OnClic
         // 根据 position 对特定项目进行编辑
         val action = actionsList[position]
         Log.d(TAG, "editAction: $position, $action")
+        if (action.type == TASK_ACTION_FRPC || action.type == TASK_ACTION_HTTPSERVER) {
+            XToastUtils.error("This action has been disabled")
+            return
+        }
 
         val widgetInfoIndex = action.type - KEY_BACK_CODE_ACTION
         //判断是否存在

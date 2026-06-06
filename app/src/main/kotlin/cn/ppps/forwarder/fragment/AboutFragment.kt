@@ -3,7 +3,6 @@ package cn.ppps.forwarder.fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import cn.ppps.forwarder.App
 import cn.ppps.forwarder.BuildConfig
 import cn.ppps.forwarder.R
 import cn.ppps.forwarder.core.BaseFragment
@@ -14,21 +13,14 @@ import cn.ppps.forwarder.utils.CacheUtils
 import cn.ppps.forwarder.utils.CommonUtils.Companion.gotoProtocol
 import cn.ppps.forwarder.utils.CommonUtils.Companion.previewMarkdown
 import cn.ppps.forwarder.utils.CommonUtils.Companion.previewPicture
-import cn.ppps.forwarder.utils.CommonUtils.Companion.restartApplication
 import cn.ppps.forwarder.utils.HistoryUtils
 import cn.ppps.forwarder.utils.HttpServerUtils
-import cn.ppps.forwarder.utils.Log
 import cn.ppps.forwarder.utils.SettingUtils
 import cn.ppps.forwarder.utils.XToastUtils
-import cn.ppps.forwarder.utils.sdkinit.XUpdateInit
 import com.xuexiang.xaop.annotation.SingleClick
 import com.xuexiang.xpage.annotation.Page
 import com.xuexiang.xui.widget.actionbar.TitleBar
-import com.xuexiang.xui.widget.dialog.materialdialog.DialogAction
-import com.xuexiang.xui.widget.dialog.materialdialog.MaterialDialog
 import com.xuexiang.xui.widget.textview.supertextview.SuperTextView
-import frpclib.Frpclib
-import java.io.File
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -56,32 +48,24 @@ class AboutFragment : BaseFragment<FragmentAboutBinding?>(), SuperTextView.OnSup
         binding!!.menuVersion.setLeftString(String.format(resources.getString(R.string.about_app_version), AppUtils.getAppVersionName()))
         binding!!.menuCache.setLeftString(String.format(resources.getString(R.string.about_cache_size), CacheUtils.getTotalCacheSize(requireContext())))
 
-        if (App.FrpclibInited) {
-            binding!!.menuFrpc.setLeftString(String.format(resources.getString(R.string.about_frpc_version), Frpclib.getVersion()))
-            binding!!.menuFrpc.visibility = View.VISIBLE
-        }
+        binding!!.menuFrpc.visibility = View.GONE
 
         val dateFormat = SimpleDateFormat("yyyy", Locale.CHINA)
         val currentYear = dateFormat.format(Date())
         binding!!.copyright.text = java.lang.String.format(resources.getString(R.string.about_copyright), currentYear)
 
-        binding!!.scbAutoCheckUpdate.isChecked = SettingUtils.autoCheckUpdate
-        binding!!.scbAutoCheckUpdate.setOnCheckedChangeListener { _, isChecked ->
-            SettingUtils.autoCheckUpdate = isChecked
-        }
+        SettingUtils.autoCheckUpdate = false
+        binding!!.scbAutoCheckUpdate.isChecked = false
+        binding!!.scbAutoCheckUpdate.isEnabled = false
 
-        binding!!.sbJoinPreviewProgram.isChecked = SettingUtils.joinPreviewProgram
-        binding!!.sbJoinPreviewProgram.setOnCheckedChangeListener { _, isChecked ->
-            SettingUtils.joinPreviewProgram = isChecked
-            if (isChecked) {
-                XToastUtils.success(getString(R.string.join_preview_program_tips))
-            }
-        }
+        SettingUtils.joinPreviewProgram = false
+        binding!!.sbJoinPreviewProgram.isChecked = false
+        binding!!.sbJoinPreviewProgram.isEnabled = false
     }
 
     override fun initListeners() {
         binding!!.btnUpdate.setOnClickListener {
-            XUpdateInit.checkUpdate(requireContext(), true, SettingUtils.joinPreviewProgram)
+            XToastUtils.info("Online update is disabled")
         }
         binding!!.btnCache.setOnClickListener {
             HistoryUtils.clearPreference()
@@ -90,24 +74,7 @@ class AboutFragment : BaseFragment<FragmentAboutBinding?>(), SuperTextView.OnSup
             binding!!.menuCache.setLeftString(String.format(resources.getString(R.string.about_cache_size), CacheUtils.getTotalCacheSize(requireContext())))
         }
         binding!!.btnFrpc.setOnClickListener {
-            try {
-                val soFile = File(context?.filesDir?.absolutePath + "/libs/libgojni.so")
-                if (soFile.exists()) soFile.delete()
-                MaterialDialog.Builder(requireContext())
-                    .iconRes(R.drawable.ic_menu_frpc)
-                    .title(R.string.menu_frpc)
-                    .content(R.string.about_frpc_deleted)
-                    .cancelable(false)
-                    .positiveText(R.string.confirm)
-                    .onPositive { _: MaterialDialog?, _: DialogAction? ->
-                        restartApplication()
-                    }
-                    .show()
-            } catch (e: Exception) {
-                e.printStackTrace()
-                Log.e("AboutFragment", "btnFrpc.setOnClickListener error: ${e.message}")
-                XToastUtils.error(e.message.toString())
-            }
+            XToastUtils.info("Frpc is disabled")
         }
         binding!!.btnGithub.setOnClickListener {
             AgentWebActivity.goWeb(context, getString(R.string.url_project_github))

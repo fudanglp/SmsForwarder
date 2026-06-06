@@ -11,7 +11,6 @@ import androidx.fragment.app.Fragment
 import androidx.viewbinding.ViewBinding
 import cn.ppps.forwarder.App
 import cn.ppps.forwarder.core.http.loader.ProgressLoader
-import com.umeng.analytics.MobclickAgent
 import com.xuexiang.xhttp2.subsciber.impl.IProgressLoader
 import com.xuexiang.xpage.base.XPageActivity
 import com.xuexiang.xpage.base.XPageFragment
@@ -132,12 +131,10 @@ abstract class BaseFragment<Binding : ViewBinding?> : XPageFragment() {
 
     override fun onResume() {
         super.onResume()
-        MobclickAgent.onPageStart(pageName)
     }
 
     override fun onPause() {
         super.onPause()
-        MobclickAgent.onPageEnd(pageName)
     }
     //==============================页面跳转api===================================//
     /**

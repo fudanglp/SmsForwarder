@@ -24,7 +24,6 @@ import com.hjq.language.OnLanguageListener
 import cn.ppps.forwarder.activity.MainActivity
 import cn.ppps.forwarder.core.Core
 import cn.ppps.forwarder.database.AppDatabase
-import cn.ppps.forwarder.database.repository.FrpcRepository
 import cn.ppps.forwarder.database.repository.LogsRepository
 import cn.ppps.forwarder.database.repository.MsgRepository
 import cn.ppps.forwarder.database.repository.RuleRepository
@@ -38,7 +37,6 @@ import cn.ppps.forwarder.receiver.LockScreenReceiver
 import cn.ppps.forwarder.receiver.NetworkChangeReceiver
 import cn.ppps.forwarder.service.BluetoothScanService
 import cn.ppps.forwarder.service.ForegroundService
-import cn.ppps.forwarder.service.HttpServerService
 import cn.ppps.forwarder.service.LocationService
 import cn.ppps.forwarder.utils.ACTION_START
 import cn.ppps.forwarder.utils.AppInfo
@@ -46,20 +44,13 @@ import cn.ppps.forwarder.utils.CactusSave
 import cn.ppps.forwarder.utils.FRONT_CHANNEL_ID
 import cn.ppps.forwarder.utils.FRONT_CHANNEL_NAME
 import cn.ppps.forwarder.utils.FRONT_NOTIFY_ID
-import cn.ppps.forwarder.utils.FRPC_LIB_VERSION
 import cn.ppps.forwarder.utils.HistoryUtils
-import cn.ppps.forwarder.utils.HttpServerUtils
 import cn.ppps.forwarder.utils.Log
 import cn.ppps.forwarder.utils.ProximitySensorScreenHelper
 import cn.ppps.forwarder.utils.SettingUtils
 import cn.ppps.forwarder.utils.SharedPreference
-import cn.ppps.forwarder.utils.sdkinit.UMengInit
 import cn.ppps.forwarder.utils.sdkinit.XBasicLibInit
-import cn.ppps.forwarder.utils.sdkinit.XUpdateInit
-import cn.ppps.forwarder.utils.tinker.TinkerLoadLibrary
 import com.king.location.LocationClient
-import com.xuexiang.xutil.file.FileUtils
-import frpclib.Frpclib
 import io.reactivex.Observable
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.Disposable
@@ -81,7 +72,6 @@ class App : Application(), CactusCallback, Configuration.Provider by Core {
 
     val applicationScope = CoroutineScope(SupervisorJob())
     val database by lazy { AppDatabase.getInstance(this) }
-    val frpcRepository by lazy { FrpcRepository(database.frpcDao()) }
     val msgRepository by lazy { MsgRepository(database.msgDao()) }
     val logsRepository by lazy { LogsRepository(database.logsDao()) }
     val ruleRepository by lazy { RuleRepository(database.ruleDao()) }
@@ -137,9 +127,6 @@ class App : Application(), CactusCallback, Configuration.Provider by Core {
         val Geocoder by lazy { Geocoder(context) }
         val DateFormat by lazy { SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()) }
 
-        //Frpclib是否已经初始化
-        var FrpclibInited = false
-
         //是否需要在拼接字符串时添加空格
         var isNeedSpaceBetweenWords = false
     }
@@ -180,23 +167,11 @@ class App : Application(), CactusCallback, Configuration.Provider by Core {
             context = applicationContext
             initLibs()
 
-            //纯客户端模式
-            if (SettingUtils.enablePureClientMode) return
+            // 远控客户端模式已禁用，兼容旧配置时强制关闭。
+            SettingUtils.enablePureClientMode = false
 
             //初始化WorkManager
             WorkManager.initialize(this, Configuration.Builder().build())
-
-            //动态加载FrpcLib
-            val libPath = filesDir.absolutePath + "/libs"
-            val soFile = File(libPath)
-            if (soFile.exists()) {
-                try {
-                    TinkerLoadLibrary.installNativeLibraryPath(classLoader, soFile)
-                    FrpclibInited = FileUtils.isFileExists(filesDir.absolutePath + "/libs/libgojni.so") && FRPC_LIB_VERSION == Frpclib.getVersion()
-                } catch (throwable: Throwable) {
-                    Log.e("APP", throwable.message.toString())
-                }
-            }
 
             //启动前台服务
             val foregroundServiceIntent = Intent(this, ForegroundService::class.java)
@@ -205,13 +180,6 @@ class App : Application(), CactusCallback, Configuration.Provider by Core {
                 startForegroundService(foregroundServiceIntent)
             } else {
                 startService(foregroundServiceIntent)
-            }
-
-            //启动HttpServer
-            if (HttpServerUtils.enableServerAutorun) {
-                Intent(this, HttpServerService::class.java).also {
-                    startService(it)
-                }
             }
 
             //启动LocationService
@@ -335,10 +303,6 @@ class App : Application(), CactusCallback, Configuration.Provider by Core {
         Log.init(applicationContext)
         // 转发历史工具类初始化
         HistoryUtils.init(applicationContext)
-        // 版本更新初始化
-        XUpdateInit.init(this)
-        // 运营统计数据
-        UMengInit.init(this)
         // 初始化语种切换框架
         MultiLanguages.init(this)
         // 设置语种变化监听器

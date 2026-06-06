@@ -8,7 +8,6 @@ plugins {
     id 'kotlin-kapt'
     id 'kotlin-parcelize'
     id 'img-optimizer'
-    id 'com.yanzhenjie.andserver'
     //AspectJX: https://github.com/wurensen/gradle_plugin_android_aspectjx
     //id "io.github.wurensen.android-aspectjx" version "3.3.2"
 }
@@ -184,13 +183,6 @@ android {
     }
     def abiCodes = ['universal': 1, 'armeabi-v7a': 2, 'arm64-v8a': 3, 'x86': 4, 'x86_64': 5]
     packagingOptions {
-        //去除FrpcLib的so，用时下载并动态加载
-        if (excludeFrpclib.toBoolean()) {
-            exclude 'lib/armeabi-v7a/libgojni.so'
-            exclude 'lib/arm64-v8a/libgojni.so'
-            exclude 'lib/x86/libgojni.so'
-            exclude 'lib/x86_64/libgojni.so'
-        }
         jniLibs {
             excludes += ["kotlin/**"]
         }
@@ -277,9 +269,6 @@ tasks.withType(Test).configureEach {
 
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
-    //frpc
-    implementation files('libs/frpclib.aar')
-
     //MQTT协议
     implementation("org.eclipse.paho:org.eclipse.paho.client.mqttv3:1.2.5")
 
@@ -311,11 +300,6 @@ dependencies {
     implementation 'com.github.xuexiangjys.AgentWeb:agentweb-download:1.0.1'//选填
     //屏幕适配AutoSize：https://github.com/JessYanCoding/AndroidAutoSize
     implementation 'me.jessyan:autosize:1.2.1'
-    //友盟统计
-    implementation 'com.umeng.umsdk:common:9.8.9'
-    implementation 'com.umeng.umsdk:asms:1.8.7.2'
-    implementation 'com.umeng.umsdk:uyumao:1.1.4'
-
     //预加载占位控件
     implementation 'me.samlss:broccoli:1.0.0'
 
@@ -396,10 +380,6 @@ dependencies {
     //Android Keep Alive(安卓保活)，Cactus 集成双进程前台服务，JobScheduler，onePix(一像素)，WorkManager，无声音乐
     //https://github.com/gyf-dev/Cactus
     implementation 'com.gyf.cactus:cactus:1.1.3-beta13'
-
-    //HTTP服务器：https://github.com/yanzhenjie/AndServer
-    implementation 'cn.ppps.andserver:api:2.1.12'
-    kapt 'cn.ppps.andserver:processor:2.1.12'
 
     //Location 是一个通过 Android 自带的 LocationManager 来实现的定位功能：https://github.com/jenly1314/Location
     implementation 'com.github.pppscn:location:1.0.0'

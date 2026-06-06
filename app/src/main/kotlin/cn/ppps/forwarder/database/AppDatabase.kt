@@ -7,13 +7,11 @@ import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
-import cn.ppps.forwarder.database.dao.FrpcDao
 import cn.ppps.forwarder.database.dao.LogsDao
 import cn.ppps.forwarder.database.dao.MsgDao
 import cn.ppps.forwarder.database.dao.RuleDao
 import cn.ppps.forwarder.database.dao.SenderDao
 import cn.ppps.forwarder.database.dao.TaskDao
-import cn.ppps.forwarder.database.entity.Frpc
 import cn.ppps.forwarder.database.entity.Logs
 import cn.ppps.forwarder.database.entity.LogsDetail
 import cn.ppps.forwarder.database.entity.Msg
@@ -26,7 +24,7 @@ import cn.ppps.forwarder.utils.SettingUtils
 import cn.ppps.forwarder.utils.TAG_LIST
 
 @Database(
-    entities = [Frpc::class, Msg::class, Logs::class, Rule::class, Sender::class, Task::class],
+    entities = [Msg::class, Logs::class, Rule::class, Sender::class, Task::class],
     views = [LogsDetail::class],
     version = 21,
     exportSchema = false
@@ -34,7 +32,6 @@ import cn.ppps.forwarder.utils.TAG_LIST
 @TypeConverters(ConvertersDate::class)
 abstract class AppDatabase : RoomDatabase() {
 
-    abstract fun frpcDao(): FrpcDao
     abstract fun msgDao(): MsgDao
     abstract fun logsDao(): LogsDao
     abstract fun ruleDao(): RuleDao
@@ -55,43 +52,7 @@ abstract class AppDatabase : RoomDatabase() {
             val builder = Room.databaseBuilder(
                 context.applicationContext, AppDatabase::class.java, DATABASE_NAME
             ).allowMainThreadQueries() //TODO:允许主线程访问，后面再优化
-                .addCallback(object : Callback() {
-                    override fun onCreate(db: SupportSQLiteDatabase) {
-                        //fillInDb(context.applicationContext)
-                        db.execSQL(
-                            """
-INSERT INTO "Frpc" VALUES ('830b0a0e-c2b3-4f95-b3c9-55db12923d2e', '远程控制SmsForwarder', '[common]
-#frps服务端公网IP
-server_addr = 88.88.88.88
-#frps服务端公网端口
-server_port = 8888
-#可选，建议启用
-token = 88888888
-#连接服务端的超时时间（增大时间避免frpc在网络未就绪的情况下启动失败）
-dial_server_timeout = 60
-#第一次登陆失败后是否退出
-login_fail_exit = false
-
-#[二选一即可]每台机器不可重复，通过 http://88.88.88.88:5000 访问
-[SmsForwarder-TCP]
-type = tcp
-local_ip = 127.0.0.1
-local_port = 5000
-#只要修改下面这一行（frps所在服务器必须暴露的公网端口）
-remote_port = 5000
-
-#[二选一即可]每台机器不可重复，通过 http://smsf.demo.com 访问
-[SmsForwarder-HTTP]
-type = http
-local_ip = 127.0.0.1
-local_port = 5000
-#只要修改下面这一行（在frps端将域名反代到vhost_http_port）
-custom_domains = smsf.demo.com
-', 0, '1651334400000')
-""".trimIndent()
-                        )
-                    }
-                }).addMigrations(
+                .addMigrations(
                     MIGRATION_1_2,
                     MIGRATION_2_3,
                     MIGRATION_3_4,
@@ -185,56 +146,6 @@ custom_domains = smsf.demo.com
         //从SQLite迁移到 Room
         private val MIGRATION_9_10 = object : Migration(9, 10) {
             override fun migrate(database: SupportSQLiteDatabase) {
-                database.execSQL(
-                    """
-CREATE TABLE "Frpc" (
-  "uid" TEXT NOT NULL,
-  "name" TEXT NOT NULL,
-  "config" TEXT NOT NULL,
-  "autorun" INTEGER NOT NULL DEFAULT 0,
-  "time" INTEGER NOT NULL,
-  PRIMARY KEY ("uid")
-)
-""".trimIndent()
-                )
-                database.execSQL(
-                    """
-INSERT INTO "Frpc" VALUES ('830b0a0e-c2b3-4f95-b3c9-55db12923d2e', '远程控制SmsForwarder', '
-#frps服务端公网IP
-serverAddr = "88.88.88.88"
-#frps服务端公网端口
-serverPort = 8888
-#连接服务端的超时时间（增大时间避免frpc在网络未就绪的情况下启动失败）
-transport.dialServerTimeout = 60
-#第一次登陆失败后是否退出
-loginFailExit = false
-#可选，建议启用
-auth.method = "token"
-auth.token = "88888888"
-
-#[二选一即可]每台机器的 name 和 remotePort 不可重复，通过 http://88.88.88.88:5000 访问
-[[proxies]]
-#同一个frps下，多台设备的 name 不可重复
-name = "SmsForwarder-TCP-001"
-type = "tcp"
-localIP = "127.0.0.1"
-localPort = 5000
-#只要修改下面这一行（frps所在服务器必须暴露且防火墙放行的公网端口，同一个frps下不可重复）
-remotePort = 5000
-
-#[二选一即可]每台机器的 name 和 customDomains 不可重复，通过 http://smsf.demo.com 访问
-[[proxies]]
-#同一个frps下，多台设备的 name 不可重复
-name = "SmsForwarder-HTTP-001"
-type = "http"
-localPort = 5000
-#只要修改下面这一行（在frps端将域名反代到vhost_http_port）
-customDomains = ["smsf.demo.com"]
-
-', 0, '1651334400000')
-""".trimIndent()
-                )
-
                 database.execSQL("ALTER TABLE log RENAME TO old_log")
                 database.execSQL(
                     """

@@ -672,9 +672,6 @@
     <string name="request_failed">請求失敗：</string>
     <string name="request_failed_tips">請求失敗：%s</string>
     <string name="no_sms_sending_permission">沒有簡訊發送權限</string>
-    <string name="frpclib_download_title">缺少 FrpcLib v%s 動態庫</string>
-    <string name="frpclib_download_content">正在下載中，請稍後……</string>
-    <string name="frpclib_version_mismatch">FrpcLib 版本不匹配</string>
     <string name="page_not_found">頁面未找到！</string>
     <string name="data_error">數據出錯！</string>
     <string name="cannot_open_with_browser">無法使用瀏覽器打開</string>

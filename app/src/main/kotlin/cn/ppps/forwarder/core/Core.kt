@@ -4,7 +4,6 @@ import android.app.Application
 import androidx.work.Configuration
 import cn.ppps.forwarder.App
 import cn.ppps.forwarder.BuildConfig
-import cn.ppps.forwarder.database.repository.FrpcRepository
 import cn.ppps.forwarder.database.repository.LogsRepository
 import cn.ppps.forwarder.database.repository.MsgRepository
 import cn.ppps.forwarder.database.repository.RuleRepository
@@ -15,7 +14,6 @@ import kotlinx.coroutines.launch
 
 object Core : Configuration.Provider {
     lateinit var app: Application
-    val frpc: FrpcRepository by lazy { (app as App).frpcRepository }
     val msg: MsgRepository by lazy { (app as App).msgRepository }
     val logs: LogsRepository by lazy { (app as App).logsRepository }
     val rule: RuleRepository by lazy { (app as App).ruleRepository }

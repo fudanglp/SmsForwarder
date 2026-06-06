@@ -14,7 +14,6 @@ import android.media.AudioManager
 import android.media.MediaPlayer
 import android.os.Build
 import android.os.IBinder
-import android.text.TextUtils
 import androidx.core.app.NotificationCompat
 import androidx.lifecycle.Observer
 import androidx.work.OneTimeWorkRequestBuilder
@@ -30,14 +29,11 @@ import cn.ppps.forwarder.utils.ACTION_STOP_ALARM
 import cn.ppps.forwarder.utils.ACTION_UPDATE_NOTIFICATION
 import cn.ppps.forwarder.utils.CommonUtils
 import cn.ppps.forwarder.utils.EVENT_ALARM_ACTION
-import cn.ppps.forwarder.utils.EVENT_FRPC_RUNNING_ERROR
-import cn.ppps.forwarder.utils.EVENT_FRPC_RUNNING_SUCCESS
 import cn.ppps.forwarder.utils.EXTRA_UPDATE_NOTIFICATION
 import cn.ppps.forwarder.utils.FRONT_CHANNEL_ID
 import cn.ppps.forwarder.utils.FRONT_CHANNEL_NAME
 import cn.ppps.forwarder.utils.FRONT_NOTIFY_ID
 import cn.ppps.forwarder.utils.FlashUtils
-import cn.ppps.forwarder.utils.INTENT_FRPC_APPLY_FILE
 import cn.ppps.forwarder.utils.Log
 import cn.ppps.forwarder.utils.SettingUtils
 import cn.ppps.forwarder.utils.TASK_CONDITION_CRON
@@ -46,13 +42,6 @@ import cn.ppps.forwarder.utils.task.CronJobScheduler
 import cn.ppps.forwarder.workers.LoadAppListWorker
 import com.jeremyliao.liveeventbus.LiveEventBus
 import com.xuexiang.xutil.XUtil
-import frpclib.Frpclib
-import io.reactivex.Single
-import io.reactivex.SingleObserver
-import io.reactivex.android.schedulers.AndroidSchedulers
-import io.reactivex.disposables.CompositeDisposable
-import io.reactivex.disposables.Disposable
-import io.reactivex.schedulers.Schedulers
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.async
@@ -64,35 +53,6 @@ class ForegroundService : Service() {
 
     private val TAG: String = ForegroundService::class.java.simpleName
     private var notificationManager: NotificationManager? = null
-
-    private val compositeDisposable = CompositeDisposable()
-    private val frpcObserver = Observer { uid: String ->
-        if (!App.FrpclibInited || Frpclib.isRunning(uid)) return@Observer
-
-        Core.frpc.get(uid).flatMap { (uid1, _, config) ->
-            val error = Frpclib.runContent(uid1, config)
-            Single.just(error)
-        }.subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread()).subscribe(object : SingleObserver<String> {
-            override fun onSubscribe(d: Disposable) {
-                compositeDisposable.add(d)
-            }
-
-            override fun onError(e: Throwable) {
-                e.printStackTrace()
-                Log.e(TAG, "onError: ${e.message}")
-                LiveEventBus.get(EVENT_FRPC_RUNNING_ERROR, String::class.java).post(uid)
-            }
-
-            override fun onSuccess(msg: String) {
-                if (!TextUtils.isEmpty(msg)) {
-                    Log.e(TAG, msg)
-                    LiveEventBus.get(EVENT_FRPC_RUNNING_ERROR, String::class.java).post(uid)
-                } else {
-                    LiveEventBus.get(EVENT_FRPC_RUNNING_SUCCESS, String::class.java).post(uid)
-                }
-            }
-        })
-    }
 
     // 振动控制
     private lateinit var vibrationUtils: VibrationUtils
@@ -289,32 +249,6 @@ class ForegroundService : Service() {
                 WorkManager.getInstance(XUtil.getContext()).enqueue(request)
             }
 
-            //启动 Frpc
-            if (App.FrpclibInited) {
-                //监听Frpc启动指令
-                LiveEventBus.get(INTENT_FRPC_APPLY_FILE, String::class.java).observeForever(frpcObserver)
-                //自启动的Frpc
-                GlobalScope.async(Dispatchers.IO) {
-                    val frpcList = Core.frpc.getAutorun()
-
-                    if (frpcList.isEmpty()) {
-                        Log.d(TAG, "没有自启动的Frpc")
-                        return@async
-                    }
-
-                    for (frpc in frpcList) {
-                        Log.d(TAG, "自启动的Frpc: $frpc")
-                        GlobalScope.async(Dispatchers.IO) {
-                            val error = Frpclib.runContent(frpc.uid, frpc.config)
-                            Log.d(TAG, "自启动的Frpc: uid=${frpc.uid}, error=$error")
-                            if (!TextUtils.isEmpty(error)) {
-                                Log.e(TAG, error)
-                            }
-                        }
-                    }
-                }
-            }
-
             //播放警报
             LiveEventBus.get<AlarmSetting>(EVENT_ALARM_ACTION).observeForever(alarmObserver)
 
@@ -328,7 +262,6 @@ class ForegroundService : Service() {
         try {
             stopForeground(true)
             stopSelf()
-            compositeDisposable.dispose()
             isRunning = false
             alarmPlayer?.release()
             alarmPlayer = null
@@ -372,7 +305,7 @@ class ForegroundService : Service() {
         if (largeIconResId != null) {
             builder.setLargeIcon(BitmapFactory.decodeResource(resources, largeIconResId))
         } else {
-            builder.setLargeIcon(BitmapFactory.decodeResource(resources, R.drawable.ic_menu_frpc))
+            builder.setLargeIcon(BitmapFactory.decodeResource(resources, R.mipmap.ic_launcher))
         }
 
         // 添加停止按钮（可选）

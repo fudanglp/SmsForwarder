@@ -12,18 +12,13 @@
 
 监控Android手机短信、来电、APP通知，并根据指定规则转发到其他手机：钉钉群自定义机器人、钉钉企业内机器人、企业微信群机器人、企业微信应用消息、飞书群机器人、飞书企业应用、邮箱、bark、webhook、Tele****机器人、Server酱、PushPlus、手机短信等。
 
-包括主动控制服务端与客户端，让你轻松远程发短信、查短信、查通话、查话簿、查电量等。（V3.0 新增）
-
 自动任务・快捷指令，轻松自动化，助您事半功倍，更多时间享受亲情陪伴！（v3.3 新增）
 
 > 注意：从`2022-06-06`开始，原`Java版`的代码归档到`v2.x`分支，不再更新！
 
 > `v3.x` 适配 Android 4.4 ~ 13.0
 
-> `加入SmsF预览体验计划`（在线更新每周构建版，率先体验新版&修复BUG）
-
 **升级操作提示：** 
-- `加入SmsF预览体验计划`后在线更新（`关于软件`页面开启，`v3.3.0_240305+`适用）
 -  手动下载：https://github.com/pppscn/SmsForwarder/actions/workflows/Weekly_Build.yml
 
 --------
@@ -36,7 +31,7 @@
 
 * 如果任何单位或个人认为该项目的代码/APK可能涉嫌侵犯其权利，则应及时通知并提供身份证明，所有权证明，我们将在收到认证文件后删除相关代码/APK。
 
-* 隐私声明： **SmsForwarder 不会收集任何您的隐私数据！！！** APP启动时发送版本信息发送到友盟统计；手动检查新版本时发送版本号用于检查新版本；除此之外，没有任何数据！！！
+* 隐私声明： **SmsForwarder 不会收集任何您的隐私数据！！！** 本版本已移除友盟统计并禁用在线更新检查。
 
 * 防诈提醒： `SmsForwarder`完全免费开源，请您在 [打赏](https://gitee.com/pp/SmsForwarder/wikis/pages?sort_id=4912193&doc_id=1821427) 前务必确认是否出于自愿？本项目不参与任何刷单返利担保！**请您远离刷单返利陷阱，谨防网络诈骗！**
 
@@ -94,7 +89,6 @@
 
 + https://github.com/xiaoyuanhost/TranspondSms (项目原型)
 + https://github.com/xuexiangjys/XUI （UI框架）
-+ https://github.com/xuexiangjys/XUpdate （在线升级）
 + https://github.com/getActivity/XXPermissions (权限请求框架)
 + https://github.com/mainfunx/frpc_android (内网穿透)
 + https://github.com/gyf-dev/Cactus (保活措施)

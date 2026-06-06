@@ -671,9 +671,6 @@
     <string name="request_failed">Request failed: </string>
     <string name="request_failed_tips">Request failed: %s</string>
     <string name="no_sms_sending_permission">No SMS sending permission</string>
-    <string name="frpclib_download_title">Missing FrpcLib v%s</string>
-    <string name="frpclib_download_content">Downloading, please wait…</string>
-    <string name="frpclib_version_mismatch">FrpcLib version mismatch</string>
     <string name="page_not_found">Page not found!</string>
     <string name="data_error">Data error!</string>
     <string name="cannot_open_with_browser">Can\'t open with browser</string>

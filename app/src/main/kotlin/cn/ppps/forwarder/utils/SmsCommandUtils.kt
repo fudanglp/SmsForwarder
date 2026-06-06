@@ -2,23 +2,16 @@ package cn.ppps.forwarder.utils
 
 import android.Manifest
 import android.content.Context
-import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.wifi.WifiManager
 import androidx.core.app.ActivityCompat
 import cn.ppps.forwarder.App
-import cn.ppps.forwarder.core.Core
 import cn.ppps.forwarder.server.model.SmsSendData
-import cn.ppps.forwarder.service.HttpServerService
 import com.google.gson.Gson
 import com.xuexiang.xrouter.utils.TextUtils
 import com.xuexiang.xutil.XUtil
 import com.xuexiang.xutil.security.CipherUtils
 import com.xuexiang.xutil.system.DeviceUtils
-import frpclib.Frpclib
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.async
 
 @Suppress("OPT_IN_USAGE", "DeferredResultUnused", "DEPRECATION")
 class SmsCommandUtils {
@@ -42,50 +35,9 @@ class SmsCommandUtils {
             val action = cmdList[1]
             val param = if (cmdList.count() > 2) cmdList[2] else ""
             when (function) {
-                "frpc" -> {
-                    if (!App.FrpclibInited) {
-                        Log.d(TAG, "还未下载Frpc库")
-                        return false
-                    }
-
-                    GlobalScope.async(Dispatchers.IO) {
-                        val frpcList = if (param.isEmpty()) {
-                            Core.frpc.getAutorun()
-                        } else {
-                            val uids = param.split(",")
-                            Core.frpc.getByUids(uids, param)
-                        }
-
-                        if (frpcList.isEmpty()) {
-                            Log.d(TAG, "没有需要操作的Frpc")
-                            return@async
-                        }
-
-                        for (frpc in frpcList) {
-                            if (action == "start") {
-                                if (!Frpclib.isRunning(frpc.uid)) {
-                                    val error = Frpclib.runContent(frpc.uid, frpc.config)
-                                    if (!TextUtils.isEmpty(error)) {
-                                        Log.e(TAG, error)
-                                    }
-                                }
-                            } else if (action == "stop") {
-                                if (Frpclib.isRunning(frpc.uid)) {
-                                    Frpclib.close(frpc.uid)
-                                }
-                            }
-                        }
-                    }
-                }
-
-                "httpserver" -> {
-                    Intent(context, HttpServerService::class.java).also {
-                        if (action == "start") {
-                            context.startService(it)
-                        } else if (action == "stop") {
-                            context.stopService(it)
-                        }
-                    }
+                "frpc", "httpserver" -> {
+                    Log.w(TAG, "$function command disabled")
+                    return false
                 }
 
                 "system" -> {

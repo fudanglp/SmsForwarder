@@ -154,16 +154,6 @@ const val FRONT_NOTIFY_ID = 0x1010
 const val FRONT_CHANNEL_ID = "cn.ppps.forwarder"
 const val FRONT_CHANNEL_NAME = "SmsForwarder Foreground Service"
 
-//Frp内网穿透
-const val FRPC_LIB_DOWNLOAD_URL = "https://xupdate.ppps.cn/uploads/%s/%s/libgojni.so"
-const val FRPC_LIB_VERSION = "0.57.0"
-const val EVENT_FRPC_UPDATE_CONFIG = "EVENT_FRPC_UPDATE_CONFIG"
-const val EVENT_FRPC_DELETE_CONFIG = "EVENT_FRPC_DELETE_CONFIG"
-const val EVENT_FRPC_RUNNING_ERROR = "EVENT_FRPC_RUNNING_ERROR"
-const val EVENT_FRPC_RUNNING_SUCCESS = "EVENT_FRPC_RUNNING_SUCCESS"
-const val INTENT_FRPC_EDIT_FILE = "INTENT_FRPC_EDIT_FILE"
-const val INTENT_FRPC_APPLY_FILE = "INTENT_FRPC_APPLY_FILE"
-
 //声音警报
 const val EVENT_ALARM_ACTION = "EVENT_ALARM_ACTION"
 
@@ -191,10 +181,6 @@ const val EVENT_LOAD_APP_LIST = "EVENT_LOAD_APP_LIST"
 
 const val EVENT_KEY_SIM_SLOT = "EVENT_KEY_SIM_SLOT"
 const val EVENT_KEY_PHONE_NUMBERS = "EVENT_KEY_PHONE_NUMBERS"
-
-//在线升级&预览计划URL
-const val KEY_UPDATE_URL = "https://xupdate.ppps.cn/update/checkVersion"
-const val KEY_PREVIEW_URL = "https://xupdate.ppps.cn/preview/checkVersion"
 
 //HttpServer相关
 const val HTTP_SERVER_PORT = 5000

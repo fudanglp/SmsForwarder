@@ -10,7 +10,6 @@ import cn.ppps.forwarder.entity.LocationInfo
 import cn.ppps.forwarder.server.model.BaseRequest
 import com.google.gson.Gson
 import com.xuexiang.xutil.resource.ResUtils.getString
-import com.yanzhenjie.andserver.error.HttpException
 import java.net.URLEncoder
 import java.nio.charset.StandardCharsets
 import javax.crypto.Mac
@@ -36,7 +35,7 @@ class HttpServerUtils private constructor() {
         var serverSignKey: String by SharedPreference(SP_SERVER_SIGN_KEY, "")
 
         //服务端安全设置
-        var safetyMeasures: Int by SharedPreference(SP_SERVER_SAFETY_MEASURES, if (TextUtils.isEmpty(serverSignKey)) 0 else 1)
+        var safetyMeasures: Int by SharedPreference(SP_SERVER_SAFETY_MEASURES, 1)
 
         //服务端SM4密钥
         var serverSm4Key: String by SharedPreference(SP_SERVER_SM4_KEY, "")
@@ -72,28 +71,28 @@ class HttpServerUtils private constructor() {
         var clientSafetyMeasures: Int by SharedPreference(SP_CLIENT_SAFETY_MEASURES, if (TextUtils.isEmpty(clientSignKey)) 0 else 1)
 
         //是否启用一键克隆
-        var enableApiClone: Boolean by SharedPreference(SP_ENABLE_API_CLONE, true)
+        var enableApiClone: Boolean by SharedPreference(SP_ENABLE_API_CLONE, false)
 
         //是否启用远程发短信
-        var enableApiSmsSend: Boolean by SharedPreference(SP_ENABLE_API_SMS_SEND, true)
+        var enableApiSmsSend: Boolean by SharedPreference(SP_ENABLE_API_SMS_SEND, false)
 
         //是否启用远程查短信
-        var enableApiSmsQuery: Boolean by SharedPreference(SP_ENABLE_API_SMS_QUERY, true)
+        var enableApiSmsQuery: Boolean by SharedPreference(SP_ENABLE_API_SMS_QUERY, false)
 
         //是否启用远程查通话
-        var enableApiCallQuery: Boolean by SharedPreference(SP_ENABLE_API_CALL_QUERY, true)
+        var enableApiCallQuery: Boolean by SharedPreference(SP_ENABLE_API_CALL_QUERY, false)
 
         //是否启用远程查话簿
-        var enableApiContactQuery: Boolean by SharedPreference(SP_ENABLE_API_CONTACT_QUERY, true)
+        var enableApiContactQuery: Boolean by SharedPreference(SP_ENABLE_API_CONTACT_QUERY, false)
 
         //是否启用远程加话簿
-        var enableApiContactAdd: Boolean by SharedPreference(SP_ENABLE_API_CONTACT_ADD, true)
+        var enableApiContactAdd: Boolean by SharedPreference(SP_ENABLE_API_CONTACT_ADD, false)
 
         //是否启用远程查电量
-        var enableApiBatteryQuery: Boolean by SharedPreference(SP_ENABLE_API_BATTERY_QUERY, true)
+        var enableApiBatteryQuery: Boolean by SharedPreference(SP_ENABLE_API_BATTERY_QUERY, false)
 
         //是否启用远程WOL
-        var enableApiWol: Boolean by SharedPreference(SP_ENABLE_API_WOL, true)
+        var enableApiWol: Boolean by SharedPreference(SP_ENABLE_API_WOL, false)
 
         //是否启用远程找手机
         var enableApiLocation: Boolean by SharedPreference(SP_ENABLE_API_LOCATION, false)
@@ -114,34 +113,34 @@ class HttpServerUtils private constructor() {
         }
 
         //校验签名
-        @Throws(HttpException::class)
+        @Throws(IllegalStateException::class)
         fun checkSign(req: BaseRequest<*>) {
             val signSecret = serverSignKey
             if (TextUtils.isEmpty(signSecret)) return
 
-            if (TextUtils.isEmpty(req.sign)) throw HttpException(500, getString(R.string.sign_required))
-            if (req.timestamp == 0L) throw HttpException(500, getString(R.string.timestamp_required))
+            if (TextUtils.isEmpty(req.sign)) throw IllegalStateException(getString(R.string.sign_required))
+            if (req.timestamp == 0L) throw IllegalStateException(getString(R.string.timestamp_required))
 
             val timestamp = System.currentTimeMillis()
             val diffTime = kotlin.math.abs(timestamp - req.timestamp)
             val tolerance = timeTolerance * 1000L
             if (diffTime > tolerance) {
-                throw HttpException(500, String.format(getString(R.string.timestamp_verify_failed), timestamp, timeTolerance, diffTime))
+                throw IllegalStateException(String.format(getString(R.string.timestamp_verify_failed), timestamp, timeTolerance, diffTime))
             }
 
             val sign = calcSign(req.timestamp.toString(), signSecret)
             if (sign != req.sign) {
                 Log.e("calcSign", sign)
                 Log.e("reqSign", req.sign.toString())
-                throw HttpException(500, getString(R.string.sign_verify_failed))
+                throw IllegalStateException(getString(R.string.sign_verify_failed))
             }
         }
 
         //判断版本是否一致
-        @Throws(HttpException::class)
+        @Throws(IllegalStateException::class)
         fun compareVersion(cloneInfo: CloneInfo) {
             val versionCode = cloneInfo.versionCode
-            if (versionCode == 0) throw HttpException(500, getString(R.string.version_code_required))
+            if (versionCode == 0) throw IllegalStateException(getString(R.string.version_code_required))
 
             val requestVersion = versionCode.toString().substring(1).toInt()
             val localVersion = AppUtils.getAppVersionCode().toString().substring(1).toInt()
@@ -153,7 +152,7 @@ class HttpServerUtils private constructor() {
                 requestVersion == localVersion
             }
             if (!isCompatible) {
-                throw HttpException(500, getString(R.string.inconsistent_version))
+                throw IllegalStateException(getString(R.string.inconsistent_version))
             }
         }
 
@@ -165,7 +164,6 @@ class HttpServerUtils private constructor() {
             cloneInfo.settings = SharedPreference.exportPreference()
             cloneInfo.senderList = Core.sender.getAllNonCache()
             cloneInfo.ruleList = Core.rule.getAllNonCache()
-            cloneInfo.frpcList = Core.frpc.getAllNonCache()
             cloneInfo.taskList = Core.task.getAllNonCache()
             return cloneInfo
         }
@@ -204,13 +202,6 @@ class HttpServerUtils private constructor() {
                     for (rule in cloneInfo.ruleList!!) {
                         if (rule.title.isNullOrEmpty()) rule.title = "" //兼容旧版本
                         Core.rule.insert(rule)
-                    }
-                }
-                //Frpc配置
-                Core.frpc.deleteAll()
-                if (!cloneInfo.frpcList.isNullOrEmpty()) {
-                    for (frpc in cloneInfo.frpcList!!) {
-                        Core.frpc.insert(frpc)
                     }
                 }
                 //Task配置

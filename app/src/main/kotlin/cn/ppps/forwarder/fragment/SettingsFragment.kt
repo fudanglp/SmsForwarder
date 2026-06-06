@@ -42,7 +42,6 @@ import cn.ppps.forwarder.adapter.spinner.AppListSpinnerAdapter
 import cn.ppps.forwarder.core.BaseFragment
 import cn.ppps.forwarder.databinding.FragmentSettingsBinding
 import cn.ppps.forwarder.entity.SimInfo
-import cn.ppps.forwarder.fragment.client.CloneFragment
 import cn.ppps.forwarder.receiver.BootCompletedReceiver
 import cn.ppps.forwarder.service.BluetoothScanService
 import cn.ppps.forwarder.service.ForegroundService
@@ -71,7 +70,6 @@ import cn.ppps.forwarder.workers.LoadAppListWorker
 import com.jeremyliao.liveeventbus.LiveEventBus
 import com.xuexiang.xaop.annotation.SingleClick
 import com.xuexiang.xpage.annotation.Page
-import com.xuexiang.xpage.core.PageOption
 import com.xuexiang.xui.widget.actionbar.TitleBar
 import com.xuexiang.xui.widget.button.SmoothCheckBox
 import com.xuexiang.xui.widget.button.switchbutton.SwitchButton
@@ -118,15 +116,6 @@ class SettingsFragment : BaseFragment<FragmentSettingsBinding?>(), View.OnClickL
             @SingleClick
             override fun performAction(view: View) {
                 GuideTipsDialog.showTipsForce(requireContext())
-            }
-        })
-        titleBar!!.addAction(object : TitleBar.ImageAction(R.drawable.ic_restore) {
-            @SingleClick
-            override fun performAction(view: View) {
-                PageOption.to(CloneFragment::class.java)
-                    .putInt(KEY_DEFAULT_SELECTION, 1) //默认离线模式
-                    .setNewActivity(true)
-                    .open(this@SettingsFragment)
             }
         })
         return titleBar
@@ -1095,15 +1084,9 @@ class SettingsFragment : BaseFragment<FragmentSettingsBinding?>(), View.OnClickL
 
     //纯客户端模式
     private fun switchDirectlyToClient(@SuppressLint("UseSwitchCompatOrMaterialCode") switchDirectlyToClient: SwitchButton) {
-        switchDirectlyToClient.isChecked = SettingUtils.enablePureClientMode
-        switchDirectlyToClient.setOnCheckedChangeListener { _: CompoundButton?, isChecked: Boolean ->
-            SettingUtils.enablePureClientMode = isChecked
-            if (isChecked) {
-                MaterialDialog.Builder(requireContext()).content(getString(R.string.enabling_pure_client_mode)).positiveText(R.string.lab_yes).onPositive { _: MaterialDialog?, _: DialogAction? ->
-                    XUtil.exitApp()
-                }.negativeText(R.string.lab_no).show()
-            }
-        }
+        SettingUtils.enablePureClientMode = false
+        switchDirectlyToClient.isChecked = false
+        switchDirectlyToClient.isEnabled = false
     }
 
     //纯自动任务模式

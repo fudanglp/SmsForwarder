@@ -17,8 +17,6 @@ import cn.ppps.forwarder.entity.MsgInfo
 import cn.ppps.forwarder.entity.TaskSetting
 import cn.ppps.forwarder.entity.action.AlarmSetting
 import cn.ppps.forwarder.entity.action.CleanerSetting
-import cn.ppps.forwarder.entity.action.FrpcSetting
-import cn.ppps.forwarder.entity.action.HttpServerSetting
 import cn.ppps.forwarder.entity.action.ResendSetting
 import cn.ppps.forwarder.entity.action.RuleSetting
 import cn.ppps.forwarder.entity.action.SenderSetting
@@ -26,11 +24,8 @@ import cn.ppps.forwarder.entity.action.SettingsSetting
 import cn.ppps.forwarder.entity.action.SmsSetting
 import cn.ppps.forwarder.entity.action.TaskActionSetting
 import cn.ppps.forwarder.entity.action.WolSetting
-import cn.ppps.forwarder.server.model.BaseResponse
-import cn.ppps.forwarder.service.HttpServerService
 import cn.ppps.forwarder.service.LocationService
 import cn.ppps.forwarder.utils.ACTION_RESTART
-import cn.ppps.forwarder.utils.Base64
 import cn.ppps.forwarder.utils.CacheUtils
 import cn.ppps.forwarder.utils.EVENT_ALARM_ACTION
 import cn.ppps.forwarder.utils.EVENT_TOAST_ERROR
@@ -38,11 +33,8 @@ import cn.ppps.forwarder.utils.EVENT_TOAST_INFO
 import cn.ppps.forwarder.utils.EVENT_TOAST_SUCCESS
 import cn.ppps.forwarder.utils.EVENT_TOAST_WARNING
 import cn.ppps.forwarder.utils.HistoryUtils
-import cn.ppps.forwarder.utils.HttpServerUtils
 import cn.ppps.forwarder.utils.Log
 import cn.ppps.forwarder.utils.PhoneUtils
-import cn.ppps.forwarder.utils.RSACrypt
-import cn.ppps.forwarder.utils.SM4Crypt
 import cn.ppps.forwarder.utils.SendUtils
 import cn.ppps.forwarder.utils.SettingUtils
 import cn.ppps.forwarder.utils.TASK_ACTION_ALARM
@@ -60,16 +52,9 @@ import cn.ppps.forwarder.utils.TASK_ACTION_WOL
 import cn.ppps.forwarder.utils.TaskWorker
 import cn.ppps.forwarder.utils.task.ConditionUtils
 import com.google.gson.Gson
-import com.google.gson.reflect.TypeToken
 import com.jeremyliao.liveeventbus.LiveEventBus
-import com.xuexiang.xhttp2.XHttp
-import com.xuexiang.xhttp2.callback.SimpleCallBack
-import com.xuexiang.xhttp2.exception.ApiException
-import com.xuexiang.xrouter.utils.TextUtils
 import com.xuexiang.xutil.XUtil
-import com.xuexiang.xutil.data.ConvertTools
 import com.xuexiang.xutil.resource.ResUtils.getString
-import frpclib.Frpclib
 import java.util.Calendar
 
 //执行每个task具体动作任务
@@ -231,70 +216,13 @@ class ActionWorker(context: Context, params: WorkerParameters) : CoroutineWorker
                     }
 
                     TASK_ACTION_FRPC -> {
-                        if (!App.FrpclibInited) {
-                            writeLog("还未下载Frpc库")
-                            continue
-                        }
-                        val frpcSetting = Gson().fromJson(action.setting, FrpcSetting::class.java)
-                        if (frpcSetting == null) {
-                            writeLog("frpcSetting is null")
-                            continue
-                        }
-
-                        val frpcList = frpcSetting.frpcList.ifEmpty {
-                            Core.frpc.getAutorun()
-                        }
-
-                        if (frpcList.isEmpty()) {
-                            writeLog("没有需要操作的Frpc")
-                            continue
-                        }
-
-                        for (frpc in frpcList) {
-                            if (frpcSetting.action == "start") {
-                                if (!Frpclib.isRunning(frpc.uid)) {
-                                    val error = Frpclib.runContent(frpc.uid, frpc.config)
-                                    if (!TextUtils.isEmpty(error)) {
-                                        Log.e(TAG, error)
-                                    }
-                                }
-                            } else if (frpcSetting.action == "stop") {
-                                if (Frpclib.isRunning(frpc.uid)) {
-                                    Frpclib.close(frpc.uid)
-                                }
-                            }
-                        }
-
-                        successNum++
-                        writeLog(String.format(getString(R.string.successful_execution), frpcSetting.description), "SUCCESS")
+                        writeLog("Frpc action disabled", "WARN")
+                        continue
                     }
 
                     TASK_ACTION_HTTPSERVER -> {
-                        val httpServerSetting = Gson().fromJson(action.setting, HttpServerSetting::class.java)
-                        if (httpServerSetting == null) {
-                            writeLog("httpServerSetting is null")
-                            continue
-                        }
-
-                        HttpServerUtils.enableApiClone = httpServerSetting.enableApiClone
-                        HttpServerUtils.enableApiSmsQuery = httpServerSetting.enableApiSmsQuery
-                        HttpServerUtils.enableApiSmsSend = httpServerSetting.enableApiSmsSend
-                        HttpServerUtils.enableApiCallQuery = httpServerSetting.enableApiCallQuery
-                        HttpServerUtils.enableApiContactQuery = httpServerSetting.enableApiContactQuery
-                        HttpServerUtils.enableApiContactAdd = httpServerSetting.enableApiContactAdd
-                        HttpServerUtils.enableApiWol = httpServerSetting.enableApiWol
-                        HttpServerUtils.enableApiLocation = httpServerSetting.enableApiLocation
-                        HttpServerUtils.enableApiBatteryQuery = httpServerSetting.enableApiBatteryQuery
-                        Intent(App.context, HttpServerService::class.java).also {
-                            if (httpServerSetting.action == "start") {
-                                App.context.startService(it)
-                            } else if (httpServerSetting.action == "stop") {
-                                App.context.stopService(it)
-                            }
-                        }
-
-                        successNum++
-                        writeLog(String.format(getString(R.string.successful_execution), httpServerSetting.description), "SUCCESS")
+                        writeLog("HTTP server action disabled", "WARN")
+                        continue
                     }
 
                     TASK_ACTION_RULE -> {
@@ -396,94 +324,8 @@ class ActionWorker(context: Context, params: WorkerParameters) : CoroutineWorker
                                 writeLog("WOL direct send failed: ${e.message}", "ERROR")
                             }
                         } else {
-                            // 通过本地服务API
-                            val requestUrl: String = HttpServerUtils.serverAddress + "/wol/send"
-                            Log.i(TAG, "requestUrl:$requestUrl")
-
-                            val msgMap: MutableMap<String, Any> = mutableMapOf()
-                            val timestamp = System.currentTimeMillis()
-                            msgMap["timestamp"] = timestamp
-                            val clientSignKey = HttpServerUtils.clientSignKey
-                            if (!TextUtils.isEmpty(clientSignKey)) {
-                                msgMap["sign"] = HttpServerUtils.calcSign(timestamp.toString(), clientSignKey)
-                            }
-
-                            val dataMap: MutableMap<String, Any> = mutableMapOf()
-                            dataMap["ip"] = wolSetting.ip
-                            dataMap["mac"] = wolSetting.mac
-                            dataMap["port"] = wolSetting.port
-                            msgMap["data"] = dataMap
-
-                            var requestMsg: String = Gson().toJson(msgMap)
-                            Log.i(TAG, "requestMsg:$requestMsg")
-
-                            val postRequest = XHttp.post(requestUrl).keepJson(true).timeStamp(true)
-
-                            when (HttpServerUtils.clientSafetyMeasures) {
-                                2 -> {
-                                    val publicKey = RSACrypt.getPublicKey(HttpServerUtils.clientSignKey)
-                                    try {
-                                        requestMsg = Base64.encode(requestMsg.toByteArray())
-                                        requestMsg = RSACrypt.encryptByPublicKey(requestMsg, publicKey)
-                                        Log.i(TAG, "requestMsg: $requestMsg")
-                                    } catch (e: Exception) {
-                                        writeLog("WOL request failed: ${e.message}", "ERROR")
-                                        continue
-                                    }
-                                    postRequest.upString(requestMsg)
-                                }
-
-                                3 -> {
-                                    try {
-                                        val sm4Key = ConvertTools.hexStringToByteArray(HttpServerUtils.clientSignKey)
-                                        val encryptCBC = SM4Crypt.encrypt(requestMsg.toByteArray(), sm4Key)
-                                        requestMsg = ConvertTools.bytes2HexString(encryptCBC)
-                                        Log.i(TAG, "requestMsg: $requestMsg")
-                                    } catch (e: Exception) {
-                                        writeLog("WOL request failed: ${e.message}", "ERROR")
-                                        continue
-                                    }
-                                    postRequest.upString(requestMsg)
-                                }
-
-                                else -> {
-                                    postRequest.upJson(requestMsg)
-                                }
-                            }
-
-                            postRequest.execute(object : SimpleCallBack<String>() {
-                                override fun onError(e: ApiException) {
-                                    writeLog("WOL request failed: ${e.displayMessage}", "ERROR")
-                                }
-
-                                override fun onSuccess(response: String) {
-                                    Log.i(TAG, response)
-                                    try {
-                                        var json = response
-                                        if (HttpServerUtils.clientSafetyMeasures == 2) {
-                                            val publicKey = RSACrypt.getPublicKey(HttpServerUtils.clientSignKey)
-                                            json = RSACrypt.decryptByPublicKey(json, publicKey)
-                                            json = String(Base64.decode(json))
-                                        } else if (HttpServerUtils.clientSafetyMeasures == 3) {
-                                            val sm4Key = ConvertTools.hexStringToByteArray(HttpServerUtils.clientSignKey)
-                                            val encryptCBC = ConvertTools.hexStringToByteArray(json)
-                                            val decryptCBC = SM4Crypt.decrypt(encryptCBC, sm4Key)
-                                            json = String(decryptCBC)
-                                        }
-                                        val resp: BaseResponse<String> = Gson().fromJson(json, object : TypeToken<BaseResponse<String>>() {}.type)
-                                        if (resp.code == 200) {
-                                            writeLog(String.format(getString(R.string.successful_execution), wolSetting.description), "SUCCESS")
-                                            successNum++
-                                        } else {
-                                            writeLog("WOL request failed: ${resp.msg}", "ERROR")
-                                        }
-                                    } catch (e: Exception) {
-                                        e.printStackTrace()
-                                        Log.e(TAG, e.toString())
-                                        writeLog("WOL request failed: $response", "ERROR")
-                                    }
-                                }
-                            })
+                            writeLog("WOL HTTP API mode disabled", "WARN")
+                            continue
                         }
                     }
 

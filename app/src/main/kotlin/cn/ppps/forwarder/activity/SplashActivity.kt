@@ -49,8 +49,6 @@ class SplashActivity : BaseSplashActivity(), CancelAdapt {
     private fun whereToJump() {
         if (SettingUtils.enablePureTaskMode) {
             ActivityUtils.startActivity(TaskActivity::class.java)
-        } else if (SettingUtils.enablePureClientMode) {
-            ActivityUtils.startActivity(ClientActivity::class.java)
         } else {
             ActivityUtils.startActivity(MainActivity::class.java)
         }

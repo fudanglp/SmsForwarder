@@ -672,9 +672,6 @@
     <string name="request_failed">请求失败：</string>
     <string name="request_failed_tips">请求失败：%s</string>
     <string name="no_sms_sending_permission">没有短信发送权限</string>
-    <string name="frpclib_download_title">缺少 FrpcLib v%s 动态库</string>
-    <string name="frpclib_download_content">正在下载中，请稍后……</string>
-    <string name="frpclib_version_mismatch">FrpcLib 版本不匹配</string>
     <string name="page_not_found">页面未找到！</string>
     <string name="data_error">数据出错！</string>
     <string name="cannot_open_with_browser">Can\'t open with browser</string>
