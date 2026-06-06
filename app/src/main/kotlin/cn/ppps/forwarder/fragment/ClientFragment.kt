@@ -11,6 +11,8 @@ import com.xuexiang.xpage.annotation.Page
 
 @Page(name = "客户端")
 class ClientFragment : BaseFragment<ViewBinding?>() {
+    override fun initViews() {}
+
     override fun viewBindingInflate(inflater: LayoutInflater, container: ViewGroup): ViewBinding {
         val view = TextView(inflater.context).apply {
             text = "HTTP remote client is disabled."

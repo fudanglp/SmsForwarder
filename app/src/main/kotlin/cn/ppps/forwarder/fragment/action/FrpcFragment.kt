@@ -11,6 +11,8 @@ import com.xuexiang.xpage.annotation.Page
 
 @Page(name = "Frpc")
 class FrpcFragment : BaseFragment<ViewBinding?>() {
+    override fun initViews() {}
+
     override fun viewBindingInflate(inflater: LayoutInflater, container: ViewGroup): ViewBinding {
         val view = TextView(inflater.context).apply {
             text = "Frpc task action is disabled."

@@ -215,7 +215,7 @@ class HttpServerUtils private constructor() {
             } catch (e: Exception) {
                 e.printStackTrace()
                 Log.e("restoreSettings", e.message.toString())
-                throw HttpException(500, e.message)
+                throw IllegalStateException(e.message)
                 //false
             }
         }

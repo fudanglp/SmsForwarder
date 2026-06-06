@@ -11,6 +11,8 @@ import com.xuexiang.xpage.annotation.Page
 
 @Page(name = "服务端")
 class ServerFragment : BaseFragment<ViewBinding?>() {
+    override fun initViews() {}
+
     override fun viewBindingInflate(inflater: LayoutInflater, container: ViewGroup): ViewBinding {
         val view = TextView(inflater.context).apply {
             text = "HTTP remote control is disabled."
